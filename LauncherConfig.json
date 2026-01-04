@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Music Player",
+    "description": "Local music player with recommended sounds, volume control, and play/stop buttons",
+    "supported_games": ["Universal"],
+    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/MusicPlayerHub.lua"
+  },
+  {
+    "name": "Cheese Escape Rayfield",
+    "description": "Executor script for Cheese Escape [Horror], automates gameplay features",
+    "supported_games": ["Cheese Escape [Horror]"],
+    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/CheeseEscapeRayfield.lua"
+  },
+  {
+    "name": "SATK Get All Weapons",
+    "description": "Gives the player all weapons in SATK",
+    "supported_games": ["SATK"],
+    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/SATKGetAllWeapons.lua"
+  }
+]
