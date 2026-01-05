@@ -18,7 +18,7 @@
   {
     "name": "SATK Get All Weapons",
     "description": "Gives the user all weapons in SATK",
-    "supported_games": ["Survive and Kill the Killers in Area 51!!!!!"]
+    "supported_games": ["Survive and Kill the Killers in Area 51!!!!!"],
     "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/SATKGetAllWeapons.lua",
     "place_id": 155382109,
     "filename": "SATKGetAllWeapons.lua"
