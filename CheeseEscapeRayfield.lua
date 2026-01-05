@@ -4,7 +4,7 @@ local Window = Rayfield:CreateWindow({
    Name = "kitty Hub - Cheese Escape",
    Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
    LoadingTitle = "kitty Hub",
-   LoadingSubtitle = "by ???",
+   LoadingSubtitle = "by iamcheese-man github",
    Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
 
    DisableRayfieldPrompts = false,
@@ -12,8 +12,8 @@ local Window = Rayfield:CreateWindow({
 
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Big Hub"
+      FolderName = "kitty hub", -- Create a custom folder for your hub/game
+      FileName = "kitty Hub"
    },
 
    Discord = {
