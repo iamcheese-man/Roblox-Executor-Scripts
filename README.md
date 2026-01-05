@@ -6,3 +6,4 @@
 # CHANGELOGS
 
 - Initial Repository Update (January 4th, 2026)
+- Moved MusicPlayerHub.lua to Rayfield UI (January 5th, 2026)
