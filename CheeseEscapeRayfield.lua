@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {
       Enabled = true,
       FolderName = "kitty hub", -- Create a custom folder for your hub/game
-      FileName = "kitty Hub"
+      FileName = "music player-kh"
    },
 
    Discord = {
