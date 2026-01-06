@@ -31,7 +31,7 @@
     "description": "Bypasses Adonis anti-cheat module.",
     "type": "AutoExecute",
     "supported_games": ["Universal"],
-    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/SATKGetAllWeapons.lua",
+    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/refs/heads/main/AdonisBypass.lua",
     "place_id": 0,
     "filename": "AdonisBypass.lua"
   }
