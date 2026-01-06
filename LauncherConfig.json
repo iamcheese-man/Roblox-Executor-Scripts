@@ -2,6 +2,7 @@
   {
     "name": "Music Player",
     "description": "Local music player with recommended sounds, volume control, and play/stop buttons",
+    "type": "ExecuteOnce",
     "supported_games": ["Universal"],
     "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/MusicPlayerHub.lua",
     "place_id": 0,
@@ -10,6 +11,7 @@
   {
     "name": "Cheese Escape Rayfield",
     "description": "Executor script for Cheese Escape [Horror], automates gameplay features",
+    "type": "ExecuteOnce",
     "supported_games": ["Cheese Escape [Horror]"],
     "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/CheeseEscapeRayfield.lua",
     "place_id": 5777099015,
@@ -18,9 +20,19 @@
   {
     "name": "SATK Get All Weapons",
     "description": "Gives the user all weapons in SATK",
+    "type": "ExecuteOnce",
     "supported_games": ["Survive and Kill the Killers in Area 51!!!!!"],
     "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/SATKGetAllWeapons.lua",
     "place_id": 155382109,
     "filename": "SATKGetAllWeapons.lua"
+  },
+  {
+    "name": "Adonis Bypass",
+    "description": "Bypasses Adonis anti-cheat module.",
+    "type": "AutoExecute",
+    "supported_games": ["Universal"],
+    "raw_url": "https://raw.githubusercontent.com/iamcheese-man/Roblox-Executor-Scripts/main/SATKGetAllWeapons.lua",
+    "place_id": 0,
+    "filename": "AdonisBypass.lua"
   }
 ]
