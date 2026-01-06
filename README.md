@@ -1,6 +1,6 @@
 # INFO
 
-- For script info and their supported games, see `LauncherConfig.json`
+- For script info and their supported games, see `ScriptInfo.json`
 - A Place ID of `0` means the script is universal
 
 # CHANGELOGS
