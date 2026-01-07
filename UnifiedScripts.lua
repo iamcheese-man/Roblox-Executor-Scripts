@@ -25,7 +25,6 @@ local player = Players.LocalPlayer
 -- ===============================
 local Window = Rayfield:CreateWindow({
     Name = "Kitty Hub",
-    Icon = 13913832390,
     LoadingTitle = "Kitty Hub",
     LoadingSubtitle = "Unified Script",
     Theme = "Default",
