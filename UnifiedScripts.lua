@@ -36,9 +36,9 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- ##################################################
--- ################ MUSIC PLAYER ####################
--- ##################################################
+-- ########################
+-- ####  Music Player  ####
+-- ########################
 
 local MusicTab = Window:CreateTab("Music", "music")
 MusicTab:CreateSection("Local Music Player")
@@ -144,10 +144,71 @@ MusicTab:CreateButton({
         end
     end
 })
+-- #######################
+-- ####  Draw or Oof  ####
+-- #######################
 
--- ##################################################
--- ################ CHEESE ESCAPE ###################
--- ##################################################
+local ChatTab = Window:CreateTab("Draw or Oof!", "brush")
+ChatTab:CreateSection("Chat Bypass + Spam")
+
+local ChatMessage = ""
+local SpamDelay = 1
+local Spamming = false
+
+ChatTab:CreateInput({
+	Name = "Message",
+	PlaceholderText = "msg here",
+	Flag = "Chat_Message",
+	Callback = function(txt)
+		ChatMessage = txt
+	end
+})
+
+ChatTab:CreateInput({
+	Name = "Delay (sec)",
+	PlaceholderText = "1",
+	Flag = "Chat_Delay",
+	Callback = function(txt)
+		SpamDelay = tonumber(txt) or 1
+	end
+})
+
+ChatTab:CreateButton({
+	Name = "Send Once",
+	Callback = function()
+		if ChatMessage == "" then return end
+		pcall(function()
+			ReplicatedStorage.Remotes.BuyPlatform:FireServer(ChatMessage)
+		end)
+	end
+})
+
+ChatTab:CreateToggle({
+	Name = "Spam",
+	CurrentValue = false,
+	Flag = "Chat_Spam",
+	Callback = function(state)
+		Spamming = state
+		if state then
+			task.spawn(function()
+				while Spamming do
+					if ChatMessage ~= "" then
+						pcall(function()
+							ReplicatedStorage.Remotes.BuyPlatform:FireServer(ChatMessage)
+						end)
+					end
+					task.wait(SpamDelay)
+				end
+			end)
+		end
+	end
+})
+
+ChatTab:CreateLabel("⚠ Lobby only")
+
+-- #######################
+-- #### Cheese Escape ####
+-- #######################
 
 local CheeseTab = Window:CreateTab("Cheese Escape", "rat")
 CheeseTab:CreateSection("Server")
@@ -218,9 +279,9 @@ CheeseTab:CreateButton({
     end
 })
 
--- ##################################################
--- #################### SATK ########################
--- ##################################################
+-- #######################
+-- ####     SATK      ####
+-- #######################
 
 local SATKTab = Window:CreateTab("SATK", "sword")
 SATKTab:CreateSection("Weapons")
@@ -257,9 +318,9 @@ SATKTab:CreateButton({
     end
 })
 
--- ##################################################
--- ################ ADONIS BYPASS ###################
--- ##################################################
+-- #######################
+-- #### Adonis Bypass ####
+-- #######################
 
 local AdonisTab = Window:CreateTab("Adonis", "shield")
 AdonisTab:CreateSection("Client Protection")
@@ -320,4 +381,4 @@ AdonisTab:CreateToggle({
     end
 })
 
-print("[Kitty Hub] LOADED — FLAGS FIXED, SLIDERS WORK")
+print("[Kitty Hub] loaded, more features coming soon")
