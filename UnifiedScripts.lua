@@ -40,7 +40,7 @@ local Window = Rayfield:CreateWindow({
 -- ################ MUSIC PLAYER ####################
 -- ##################################################
 
-local MusicTab = Window:CreateTab("Music", 4483362458)
+local MusicTab = Window:CreateTab("Music", "music")
 MusicTab:CreateSection("Local Music Player")
 
 local SoundId = ""
@@ -149,7 +149,7 @@ MusicTab:CreateButton({
 -- ################ CHEESE ESCAPE ###################
 -- ##################################################
 
-local CheeseTab = Window:CreateTab("Cheese Escape", 4483362458)
+local CheeseTab = Window:CreateTab("Cheese Escape", "rat")
 CheeseTab:CreateSection("Server")
 
 CheeseTab:CreateButton({
@@ -222,7 +222,7 @@ CheeseTab:CreateButton({
 -- #################### SATK ########################
 -- ##################################################
 
-local SATKTab = Window:CreateTab("SATK", 4483362458)
+local SATKTab = Window:CreateTab("SATK", "sword")
 SATKTab:CreateSection("Weapons")
 
 SATKTab:CreateButton({
@@ -261,7 +261,7 @@ SATKTab:CreateButton({
 -- ################ ADONIS BYPASS ###################
 -- ##################################################
 
-local AdonisTab = Window:CreateTab("Adonis", 4483362458)
+local AdonisTab = Window:CreateTab("Adonis", "shield")
 AdonisTab:CreateSection("Client Protection")
 
 local BypassEnabled = false
