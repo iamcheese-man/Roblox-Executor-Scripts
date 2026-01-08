@@ -555,7 +555,7 @@ SATKTab:CreateButton({
 
 local CProtectionTab = Window:CreateTab("Client Protections", "shield")
 CProtectionTab:CreateSection("Client Protection")
-local Section = Tab:CreateSection("ADONIS ANTI-CHEAT")
+local Section = CProtectionTab:CreateSection("ADONIS ANTI-CHEAT")
 local BypassAdonisEnabled = false
 
 local badAdonisFunctions = {
