@@ -4,9 +4,9 @@
     1) Music Player
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
-    4) Client Protection Scripts
+    4) Client Protections
     5) Webhook Manager
-    6) Draw or Oof (chat bypass)
+    6) Firewall to block IP loggers and more
 --]]
 
 -- ===============================
@@ -146,6 +146,99 @@ MusicTab:CreateButton({
         end
     end
 })
+
+-- ########################
+-- #### Client Firewall ###
+-- ########################
+
+local FirewallTab = Window:CreateTab("Firewall", "shield")
+FirewallTab:CreateSection("HTTP Request Control")
+
+local FirewallEnabled = false
+local BlockCode = 403
+local BlockMessage = "Blocked by Client Firewall"
+local OriginalRequests = {}
+
+local function hookRequest(name, fn)
+    if typeof(fn) ~= "function" then return end
+    if OriginalRequests[name] then return end
+
+    OriginalRequests[name] = fn
+
+    pcall(function()
+        hookfunction(fn, function(req)
+            if FirewallEnabled then
+                local url = typeof(req) == "table" and req.Url or tostring(req)
+                warn("[Firewall] Blocked request:", url)
+                Rayfield:Notify({
+            Title = "Firewall Blocked Request",
+            Content = url,
+            Duration = 3
+        })
+
+                return {
+                    Success = false,
+                    StatusCode = BlockCode,
+                    Body = BlockMessage,
+                    Headers = {}
+                }
+            end
+
+            return OriginalRequests[name](req)
+        end)
+    end)
+end
+
+-- Hook all known executor HTTP APIs safely
+pcall(function()
+    hookRequest("syn.request", syn and syn.request)
+    hookRequest("http.request", http and http.request)
+    hookRequest("http_request", http_request)
+    hookRequest("request", request)
+    hookRequest("fluxus.request", fluxus and fluxus.request)
+    hookRequest("krnl.request", krnl and krnl.request)
+end)
+
+-- ======================
+-- UI Controls
+-- ======================
+
+FirewallTab:CreateToggle({
+    Name = "Block ALL HTTP Requests",
+    CurrentValue = false,
+    Flag = "Firewall_BlockAll",
+    Callback = function(state)
+        FirewallEnabled = state
+        Rayfield:Notify({
+            Title = "Client Firewall",
+            Content = state and "All HTTP requests blocked" or "HTTP requests restored",
+            Duration = 3
+        })
+    end
+})
+
+FirewallTab:CreateInput({
+    Name = "Return Status Code",
+    PlaceholderText = "403",
+    Flag = "Firewall_Code",
+    Callback = function(v)
+        local n = tonumber(v)
+        if n then BlockCode = n end
+    end
+})
+
+FirewallTab:CreateInput({
+    Name = "Return Message",
+    PlaceholderText = "Blocked by Client Firewall",
+    Flag = "Firewall_Message",
+    Callback = function(v)
+        if v ~= "" then
+            BlockMessage = v
+        end
+    end
+})
+
+FirewallTab:CreateLabel("⚠ Returned to calling script")
 
 -- ########################
 -- #### Webhook Manager ###
@@ -549,16 +642,16 @@ SATKTab:CreateButton({
     end
 })
 
--- ############################
--- #### Client Protections ####
--- ############################
+-- #######################
+-- #### Adonis Bypass ####
+-- #######################
 
-local CProtectionTab = Window:CreateTab("Client Protections", "shield")
-CProtectionTab:CreateSection("Client Protection")
-local Section = CProtectionTab:CreateSection("ADONIS ANTI-CHEAT")
-local BypassAdonisEnabled = false
+local AdonisTab = Window:CreateTab("Adonis", "shield")
+AdonisTab:CreateSection("Client Protection")
 
-local badAdonisFunctions = {
+local BypassEnabled = false
+
+local badFunctions = {
     "Crash","CPUCrash","GPUCrash","Shutdown","SoftShutdown",
     "Kick","SoftKick","Seize","BlockInput","Break","Lock",
     "SetCore","ServerKick","ServerShutdown","Ban","Mute",
@@ -573,18 +666,18 @@ end
 local function neutralize(tbl)
     if type(tbl) ~= "table" then return end
     for k,v in pairs(tbl) do
-        if tableFind(badAdonisFunctions,k) and type(v)=="function" then
+        if tableFind(badFunctions,k) and type(v)=="function" then
             tbl[k] = function() warn("[Adonis Blocked]",k) end
         end
     end
 end
 
-CProtectionTab:CreateToggle({
+AdonisTab:CreateToggle({
     Name = "Enable Adonis Bypass",
     CurrentValue = false,
     Flag = "Adonis_Enable",
     Callback = function(v)
-        BypassAdonisEnabled = v
+        BypassEnabled = v
         if not v then return end
 
         for _,m in ipairs(getloadedmodules()) do
@@ -596,7 +689,7 @@ CProtectionTab:CreateToggle({
         for _,r in ipairs(ReplicatedStorage:GetDescendants()) do
             if r:IsA("RemoteEvent") then
                 r.OnClientEvent:Connect(function(cmd)
-                    if BypassAdonisEnabled and type(cmd)=="string" and tableFind(badAdonisFunctions,cmd) then
+                    if BypassEnabled and type(cmd)=="string" and tableFind(badFunctions,cmd) then
                         warn("[Blocked Adonis Remote]",cmd)
                         return
                     end
