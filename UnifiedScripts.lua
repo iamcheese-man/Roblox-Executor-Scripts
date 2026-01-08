@@ -549,16 +549,16 @@ SATKTab:CreateButton({
     end
 })
 
--- #######################
--- #### Adonis Bypass ####
--- #######################
+-- ############################
+-- #### Client Protections ####
+-- ############################
 
-local AdonisTab = Window:CreateTab("Adonis", "shield")
-AdonisTab:CreateSection("Client Protection")
+local CProtectionTab = Window:CreateTab("Client Protections", "shield")
+CProtectionTab:CreateSection("Client Protection")
+local Section = Tab:CreateSection("ADONIS ANTI-CHEAT")
+local BypassAdonisEnabled = false
 
-local BypassEnabled = false
-
-local badFunctions = {
+local badAdonisFunctions = {
     "Crash","CPUCrash","GPUCrash","Shutdown","SoftShutdown",
     "Kick","SoftKick","Seize","BlockInput","Break","Lock",
     "SetCore","ServerKick","ServerShutdown","Ban","Mute",
@@ -573,18 +573,18 @@ end
 local function neutralize(tbl)
     if type(tbl) ~= "table" then return end
     for k,v in pairs(tbl) do
-        if tableFind(badFunctions,k) and type(v)=="function" then
+        if tableFind(badAdonisFunctions,k) and type(v)=="function" then
             tbl[k] = function() warn("[Adonis Blocked]",k) end
         end
     end
 end
 
-AdonisTab:CreateToggle({
+CProtectionTab:CreateToggle({
     Name = "Enable Adonis Bypass",
     CurrentValue = false,
     Flag = "Adonis_Enable",
     Callback = function(v)
-        BypassEnabled = v
+        BypassAdonisEnabled = v
         if not v then return end
 
         for _,m in ipairs(getloadedmodules()) do
@@ -596,7 +596,7 @@ AdonisTab:CreateToggle({
         for _,r in ipairs(ReplicatedStorage:GetDescendants()) do
             if r:IsA("RemoteEvent") then
                 r.OnClientEvent:Connect(function(cmd)
-                    if BypassEnabled and type(cmd)=="string" and tableFind(badFunctions,cmd) then
+                    if BypassAdonisEnabled and type(cmd)=="string" and tableFind(badAdonisFunctions,cmd) then
                         warn("[Blocked Adonis Remote]",cmd)
                         return
                     end
