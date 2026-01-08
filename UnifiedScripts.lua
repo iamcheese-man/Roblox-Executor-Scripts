@@ -5,6 +5,8 @@
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
     4) Advanced Stealth Adonis Bypass
+    5) Webhook Manager
+    6) Draw or Oof (chat bypass)
 --]]
 
 -- ===============================
@@ -144,8 +146,237 @@ MusicTab:CreateButton({
         end
     end
 })
+
+-- ########################
+-- #### Webhook Manager ###
+-- ########################
+
+local WebhookTab = Window:CreateTab("Webhooks", "webhook")
+WebhookTab:CreateSection("Webhook Manager")
+
+local HttpService = game:GetService("HttpService")
+
+-- ======================
+-- State
+-- ======================
+local WebhookURL = ""
+local Username = "Kitty Hub"
+local AvatarURL = ""
+local MessageContent = ""
+local EmbedTitle = ""
+local EmbedDescription = ""
+local EmbedColor = 0xFF69B4
+
+local SpamEnabled = false
+local SpamDelay = 1
+
+-- ======================
+-- HTTP Resolver
+-- ======================
+local http_request =
+    (syn and syn.request)
+    or (http and http.request)
+    or http_request
+    or request
+
+-- ======================
+-- Inputs
+-- ======================
+WebhookTab:CreateInput({
+    Name = "Webhook URL",
+    PlaceholderText = "https://discord.com/api/webhooks/...",
+    Flag = "Webhook_URL",
+    Callback = function(v)
+        WebhookURL = v
+    end
+})
+
+WebhookTab:CreateInput({
+    Name = "Username",
+    PlaceholderText = "Kitty Hub",
+    Flag = "Webhook_Username",
+    Callback = function(v)
+        Username = v
+    end
+})
+
+WebhookTab:CreateInput({
+    Name = "Avatar URL",
+    PlaceholderText = "https://image.png",
+    Flag = "Webhook_Avatar",
+    Callback = function(v)
+        AvatarURL = v
+    end
+})
+
+WebhookTab:CreateInput({
+    Name = "Message",
+    PlaceholderText = "Hello from Kitty Hub",
+    Flag = "Webhook_Message",
+    Callback = function(v)
+        MessageContent = v
+    end
+})
+
+WebhookTab:CreateSection("Embed")
+
+WebhookTab:CreateInput({
+    Name = "Embed Title",
+    PlaceholderText = "Optional",
+    Flag = "Webhook_EmbedTitle",
+    Callback = function(v)
+        EmbedTitle = v
+    end
+})
+
+WebhookTab:CreateInput({
+    Name = "Embed Description",
+    PlaceholderText = "Optional",
+    Flag = "Webhook_EmbedDesc",
+    Callback = function(v)
+        EmbedDescription = v
+    end
+})
+
+WebhookTab:CreateInput({
+    Name = "Embed Color (HEX)",
+    PlaceholderText = "FF69B4",
+    Flag = "Webhook_EmbedColor",
+    Callback = function(v)
+        local n = tonumber(v, 16)
+        if n then EmbedColor = n end
+    end
+})
+
+-- ======================
+-- Delay Slider
+-- ======================
+WebhookTab:CreateSlider({
+    Name = "Spam Delay (seconds)",
+    Range = {0.1, 10},
+    Increment = 0.1,
+    CurrentValue = 1,
+    Flag = "Webhook_Delay",
+    Callback = function(v)
+        SpamDelay = v
+    end
+})
+
+-- ======================
+-- Send Function
+-- ======================
+local function sendWebhook()
+    if WebhookURL == "" or not http_request then return end
+
+    local payload = {
+        username = Username ~= "" and Username or nil,
+        avatar_url = AvatarURL ~= "" and AvatarURL or nil,
+        content = MessageContent ~= "" and MessageContent or nil,
+        embeds = {}
+    }
+
+    if EmbedTitle ~= "" or EmbedDescription ~= "" then
+        table.insert(payload.embeds, {
+            title = EmbedTitle ~= "" and EmbedTitle or nil,
+            description = EmbedDescription ~= "" and EmbedDescription or nil,
+            color = EmbedColor
+        })
+    end
+
+    http_request({
+        Url = WebhookURL,
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = HttpService:JSONEncode(payload)
+    })
+end
+
+-- ======================
+-- Buttons
+-- ======================
+WebhookTab:CreateButton({
+    Name = "Send Once",
+    Callback = function()
+        sendWebhook()
+        Rayfield:Notify({
+            Title = "Webhook",
+            Content = "Message sent",
+            Duration = 2
+        })
+    end
+})
+
+WebhookTab:CreateToggle({
+    Name = "Spam Webhook",
+    CurrentValue = false,
+    Flag = "Webhook_Spam",
+    Callback = function(state)
+        SpamEnabled = state
+        if state then
+            task.spawn(function()
+                while SpamEnabled do
+                    sendWebhook()
+                    task.wait(SpamDelay)
+                end
+            end)
+        end
+    end
+})
+
+-- ======================
+-- CLEAR TEXTBOXES (LOCAL)
+-- ======================
+WebhookTab:CreateButton({
+    Name = "Clear Textboxes",
+    Callback = function()
+        WebhookURL = ""
+        Username = "Kitty Hub"
+        AvatarURL = ""
+        MessageContent = ""
+        EmbedTitle = ""
+        EmbedDescription = ""
+        EmbedColor = 0xFF69B4
+
+        Rayfield:Notify({
+            Title = "Webhook",
+            Content = "Textboxes cleared",
+            Duration = 2
+        })
+    end
+})
+
+-- ======================
+-- DELETE WEBHOOK (REAL)
+-- ======================
+WebhookTab:CreateButton({
+    Name = "Delete Webhook",
+    Callback = function()
+        if WebhookURL == "" or not http_request then
+            Rayfield:Notify({
+                Title = "Webhook",
+                Content = "Invalid or missing URL",
+                Duration = 2
+            })
+            return
+        end
+
+        http_request({
+            Url = WebhookURL,
+            Method = "DELETE"
+        })
+
+        Rayfield:Notify({
+            Title = "Webhook",
+            Content = "DELETE request sent",
+            Duration = 3
+        })
+    end
+})
+
+WebhookTab:CreateLabel("⚠ Delete permanently removes the webhook")
+
 -- #######################
--- ####  Draw or Oof  ####
+-- ####  Chat Bypass  ####
 -- #######################
 
 local ChatTab = Window:CreateTab("Draw or Oof!", "brush")
