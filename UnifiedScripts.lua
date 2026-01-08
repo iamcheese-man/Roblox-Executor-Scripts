@@ -4,7 +4,7 @@
     1) Music Player
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
-    4) Advanced Stealth Adonis Bypass
+    4) Client Protection Scripts
     5) Webhook Manager
     6) Draw or Oof (chat bypass)
 --]]
