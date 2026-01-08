@@ -4,9 +4,7 @@
     1) Music Player
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
-    4) Client Protections
-    5) Webhook Manager
-    6) Firewall to block IP loggers and more
+    4) Advanced Stealth Adonis Bypass
 --]]
 
 -- ===============================
@@ -146,6 +144,142 @@ MusicTab:CreateButton({
         end
     end
 })
+
+-- #################################
+-- ## Click / Touch Multi Manager ##
+-- #################################
+
+local InteractTab = Window:CreateTab("Interactions", "mouse-pointer")
+InteractTab:CreateSection("ClickDetector / TouchInterest")
+
+local PathsText = ""
+local SpamEnabled = false
+local SpamDelay = 1
+
+-- ======================
+-- Path Resolver
+-- ======================
+local function resolvePath(path)
+    local current = game
+    for part in string.gmatch(path, "[^%.]+") do
+        if part == "game" then
+            current = game
+        else
+            current = current:FindFirstChild(part)
+        end
+        if not current then return nil end
+    end
+    return current
+end
+
+-- ======================
+-- Fire Single Instance
+-- ======================
+local function fireInstance(inst)
+    if inst:IsA("ClickDetector") then
+        pcall(function()
+            fireclickdetector(inst)
+        end)
+        print("[Interaction] ClickDetector:", inst:GetFullName())
+        Rayfield:Notify({
+            Title = "ClickDetector",
+            Content = inst.Name.." fired",
+            Duration = 1.5
+        })
+        return true
+    end
+
+    if inst:IsA("TouchInterest") then
+        local char = Players.LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local part = inst.Parent
+
+        if hrp and part then
+            pcall(function()
+                firetouchinterest(hrp, part, 0)
+                task.wait()
+                firetouchinterest(hrp, part, 1)
+            end)
+            print("[Interaction] TouchInterest:", inst:GetFullName())
+            Rayfield:Notify({
+                Title = "TouchInterest",
+                Content = inst.Name.." touched",
+                Duration = 1.5
+            })
+            return true
+        end
+    end
+
+    return false
+end
+
+-- ======================
+-- Process All Paths
+-- ======================
+local function processAll()
+    for line in string.gmatch(PathsText, "[^\r\n]+") do
+        local path = line:gsub("^%s+", ""):gsub("%s+$", "")
+        if path ~= "" then
+            local inst = resolvePath(path)
+            if inst then
+                fireInstance(inst)
+            else
+                warn("[Interaction] Invalid path:", path)
+            end
+        end
+    end
+end
+
+-- ======================
+-- Inputs
+-- ======================
+InteractTab:CreateInput({
+    Name = "Instance Paths",
+    PlaceholderText = 
+        "workspace.Button.ClickDetector\nworkspace.Pad.TouchInterest",
+    Flag = "Interact_Paths",
+    Callback = function(v)
+        PathsText = v
+    end
+})
+
+InteractTab:CreateInput({
+    Name = "Spam Delay (seconds)",
+    PlaceholderText = "1",
+    Flag = "Interact_Delay",
+    Callback = function(v)
+        SpamDelay = tonumber(v) or 1
+    end
+})
+
+-- ======================
+-- Buttons
+-- ======================
+InteractTab:CreateButton({
+    Name = "Fire Once",
+    Callback = function()
+        processAll()
+    end
+})
+
+InteractTab:CreateToggle({
+    Name = "Spam All",
+    CurrentValue = false,
+    Flag = "Interact_Spam",
+    Callback = function(state)
+        SpamEnabled = state
+        if state then
+            task.spawn(function()
+                while SpamEnabled do
+                    processAll()
+                    task.wait(SpamDelay)
+                end
+            end)
+        end
+    end
+})
+
+InteractTab:CreateLabel("✔ One path per line | Auto‑detects type")
 
 -- ########################
 -- #### Client Firewall ###
@@ -642,16 +776,16 @@ SATKTab:CreateButton({
     end
 })
 
--- ############################
--- #### Client Protections ####
--- ############################
+-- #######################
+-- #### Adonis Bypass ####
+-- #######################
 
-local CProtectTab = Window:CreateTab("Client Protections", "shield")
-CProtectTab:CreateSection("ADONIS ANTI-CHEAT")
+local AdonisTab = Window:CreateTab("Adonis", "shield")
+AdonisTab:CreateSection("Client Protection")
 
-local BypassAdonisEnabled = false
+local BypassEnabled = false
 
-local badAdonisFunctions = {
+local badFunctions = {
     "Crash","CPUCrash","GPUCrash","Shutdown","SoftShutdown",
     "Kick","SoftKick","Seize","BlockInput","Break","Lock",
     "SetCore","ServerKick","ServerShutdown","Ban","Mute",
@@ -666,18 +800,18 @@ end
 local function neutralize(tbl)
     if type(tbl) ~= "table" then return end
     for k,v in pairs(tbl) do
-        if tableFind(badAdonisFunctions,k) and type(v)=="function" then
+        if tableFind(badFunctions,k) and type(v)=="function" then
             tbl[k] = function() warn("[Adonis Blocked]",k) end
         end
     end
 end
 
-CProtectTab:CreateToggle({
+AdonisTab:CreateToggle({
     Name = "Enable Adonis Bypass",
     CurrentValue = false,
     Flag = "Adonis_Enable",
     Callback = function(v)
-        BypassAdonisEnabled = v
+        BypassEnabled = v
         if not v then return end
 
         for _,m in ipairs(getloadedmodules()) do
