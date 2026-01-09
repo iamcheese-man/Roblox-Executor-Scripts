@@ -4,7 +4,9 @@
     1) Music Player
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
-    4) Advanced Stealth Adonis Bypass
+    4) Client Protectons
+    5) Firewall
+    6) TouchInterest/ClickDetector Interactor
 --]]
 
 -- ===============================
