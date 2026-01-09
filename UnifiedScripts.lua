@@ -285,45 +285,97 @@ InteractTab:CreateLabel("✔ One path per line | Auto‑detects type")
 -- #### Client Firewall ###
 -- ########################
 
-local FirewallTab = Window:CreateTab("Firewall", "shield")
+local FirewallTab = Window:CreateTab("Firewall", "lock")
 FirewallTab:CreateSection("HTTP Request Control")
 
+local ALLOWED_DOMAINS = {
+    "sirius.menu/rayfield",
+    "raw.githubusercontent.com/sirius-menu/rayfield"
+}
 local FirewallEnabled = false
 local BlockCode = 403
 local BlockMessage = "Blocked by Client Firewall"
-local OriginalRequests = {}
 
+local OriginalRequests = {}
+local InHook = false
+
+-- notify queue (SAFE)
+local NotifyQueue = {}
+
+-- ======================
+-- Allowlist check
+-- ======================
+local function isAllowed(url)
+    if type(url) ~= "string" then return false end
+    url = url:lower()
+
+    for _, domain in ipairs(ALLOWED_DOMAINS) do
+        if url:find(domain, 1, true) then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- ======================
+-- Safe notifier loop
+-- ======================
+task.spawn(function()
+    while true do
+        if #NotifyQueue > 0 then
+            local msg = table.remove(NotifyQueue, 1)
+            Rayfield:Notify({
+                Title = "Firewall",
+                Content = msg,
+                Duration = 3
+            })
+        end
+        task.wait(0.2)
+    end
+end)
+
+-- ======================
+-- Hook helper
+-- ======================
 local function hookRequest(name, fn)
-    if typeof(fn) ~= "function" then return end
+    if type(fn) ~= "function" then return end
     if OriginalRequests[name] then return end
 
     OriginalRequests[name] = fn
 
-    pcall(function()
-        hookfunction(fn, function(req)
-            if FirewallEnabled then
-                local url = typeof(req) == "table" and req.Url or tostring(req)
-                warn("[Firewall] Blocked request:", url)
-                Rayfield:Notify({
-            Title = "Firewall Blocked Request",
-            Content = url,
-            Duration = 3
-        })
-
-                return {
-                    Success = false,
-                    StatusCode = BlockCode,
-                    Body = BlockMessage,
-                    Headers = {}
-                }
-            end
-
+    hookfunction(fn, function(req)
+        if InHook then
             return OriginalRequests[name](req)
-        end)
+        end
+
+        local url =
+            type(req) == "table" and req.Url
+            or tostring(req)
+
+        if FirewallEnabled and not isAllowed(url) then
+            InHook = true
+
+            warn("[Firewall] Blocked:", url)
+            table.insert(NotifyQueue, "Blocked request:\n" .. url)
+
+            InHook = false
+
+            return {
+                Success = false,
+                StatusCode = BlockCode,
+                Body = BlockMessage,
+                Headers = {}
+            }
+        end
+
+        return OriginalRequests[name](req)
     end)
 end
 
--- Hook all known executor HTTP APIs safely
+-- ======================
+-- Hook executors (ONCE)
+-- ======================
 pcall(function()
     hookRequest("syn.request", syn and syn.request)
     hookRequest("http.request", http and http.request)
@@ -338,14 +390,16 @@ end)
 -- ======================
 
 FirewallTab:CreateToggle({
-    Name = "Block ALL HTTP Requests",
+    Name = "Block ALL HTTP (Allow Rayfield)",
     CurrentValue = false,
     Flag = "Firewall_BlockAll",
     Callback = function(state)
         FirewallEnabled = state
         Rayfield:Notify({
             Title = "Client Firewall",
-            Content = state and "All HTTP requests blocked" or "HTTP requests restored",
+            Content = state and
+                "Firewall enabled (Rayfield allowed)" or
+                "Firewall disabled",
             Duration = 3
         })
     end
@@ -366,13 +420,12 @@ FirewallTab:CreateInput({
     PlaceholderText = "Blocked by Client Firewall",
     Flag = "Firewall_Message",
     Callback = function(v)
-        if v ~= "" then
-            BlockMessage = v
-        end
+        if v ~= "" then BlockMessage = v end
     end
 })
 
-FirewallTab:CreateLabel("⚠ Returned to calling script")
+FirewallTab:CreateLabel("✔ Rayfield URLs allowed")
+FirewallTab:CreateLabel("✖ Everything else blocked")
 
 -- ########################
 -- #### Webhook Manager ###
@@ -780,12 +833,12 @@ SATKTab:CreateButton({
 -- #### Adonis Bypass ####
 -- #######################
 
-local AdonisTab = Window:CreateTab("Adonis", "shield")
-AdonisTab:CreateSection("Client Protection")
+local CProtTab = Window:CreateTab("Client Protections", "shield")
+CProtTab:CreateSection("Client Protections")
 
-local BypassEnabled = false
+local BypassAdonisEnabled = false
 
-local badFunctions = {
+local badAdonisFunctions = {
     "Crash","CPUCrash","GPUCrash","Shutdown","SoftShutdown",
     "Kick","SoftKick","Seize","BlockInput","Break","Lock",
     "SetCore","ServerKick","ServerShutdown","Ban","Mute",
@@ -800,18 +853,18 @@ end
 local function neutralize(tbl)
     if type(tbl) ~= "table" then return end
     for k,v in pairs(tbl) do
-        if tableFind(badFunctions,k) and type(v)=="function" then
+        if tableFind(badAdonisFunctions,k) and type(v)=="function" then
             tbl[k] = function() warn("[Adonis Blocked]",k) end
         end
     end
 end
 
-AdonisTab:CreateToggle({
+CProtTab:CreateToggle({
     Name = "Enable Adonis Bypass",
     CurrentValue = false,
     Flag = "Adonis_Enable",
     Callback = function(v)
-        BypassEnabled = v
+        BypassAdonisEnabled = v
         if not v then return end
 
         for _,m in ipairs(getloadedmodules()) do
