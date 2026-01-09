@@ -4,9 +4,7 @@
     1) Music Player
     2) Cheese Escape Rayfield
     3) SATK Get All Weapons
-    4) Client Protectons
-    5) Firewall
-    6) TouchInterest/ClickDetector Interactor
+    4) Advanced Stealth Adonis Bypass
 --]]
 
 -- ===============================
@@ -831,66 +829,111 @@ SATKTab:CreateButton({
     end
 })
 
--- #######################
--- #### Adonis Bypass ####
--- #######################
+-- ############################
+-- #### Client Protections ####
+-- ############################
 
 local CProtTab = Window:CreateTab("Client Protections", "shield")
-CProtTab:CreateSection("Client Protections")
 
-local BypassAdonisEnabled = false
+CProtTab:CreateButton({
+    Name = "Enable Advanced Anti‑Kick",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
 
-local badAdonisFunctions = {
-    "Crash","CPUCrash","GPUCrash","Shutdown","SoftShutdown",
-    "Kick","SoftKick","Seize","BlockInput","Break","Lock",
-    "SetCore","ServerKick","ServerShutdown","Ban","Mute",
-    "Freeze","TeleportKill","ForceReset","CrashClient",
-    "CrashServer","MemoryLeak","BlackScreen","KickAll"
-}
+        if not LocalPlayer then return end
 
-local function tableFind(t,v)
-    for _,x in ipairs(t) do if x == v then return true end end
-end
+        -- =========================
+        -- State
+        -- =========================
+        local protected = true
+        local oldKick
+        local oldDestroy
+        local oldRemove
+        local oldShutdown
 
-local function neutralize(tbl)
-    if type(tbl) ~= "table" then return end
-    for k,v in pairs(tbl) do
-        if tableFind(badAdonisFunctions,k) and type(v)=="function" then
-            tbl[k] = function() warn("[Adonis Blocked]",k) end
+        -- =========================
+        -- Helper warn
+        -- =========================
+        local function blockWarn(reason)
+            warn("[Client Protections] Blocked:", reason)
         end
-    end
-end
 
-CProtTab:CreateToggle({
-    Name = "Enable Adonis Bypass",
-    CurrentValue = false,
-    Flag = "Adonis_Enable",
-    Callback = function(v)
-        BypassAdonisEnabled = v
-        if not v then return end
+        -- =========================
+        -- Hook Player:Kick()
+        -- =========================
+        pcall(function()
+            oldKick = hookfunction(LocalPlayer.Kick, function(...)
+                blockWarn("LocalPlayer:Kick()")
+                return nil
+            end)
+        end)
 
-        for _,m in ipairs(getloadedmodules()) do
-            if m.Name and m.Name:lower():find("adonis") then
-                pcall(function() neutralize(getsenv(m)) end)
+        -- =========================
+        -- Hook Instance:Destroy()
+        -- =========================
+        pcall(function()
+            oldDestroy = hookfunction(game.Destroy, function(self, ...)
+                if self == LocalPlayer or self == LocalPlayer.Character then
+                    blockWarn(":Destroy() on LocalPlayer")
+                    return nil
+                end
+                return oldDestroy(self, ...)
+            end)
+        end)
+
+        -- =========================
+        -- Hook Instance:Remove()
+        -- =========================
+        pcall(function()
+            oldRemove = hookfunction(game.Remove, function(self, ...)
+                if self == LocalPlayer or self == LocalPlayer.Character then
+                    blockWarn(":Remove() on LocalPlayer")
+                    return nil
+                end
+                return oldRemove(self, ...)
+            end)
+        end)
+
+        -- =========================
+        -- Hook game:Shutdown()
+        -- =========================
+        pcall(function()
+            oldShutdown = hookfunction(game.Shutdown, function(...)
+                blockWarn("game:Shutdown()")
+                return nil
+            end)
+        end)
+
+        -- =========================
+        -- Protect Character deletion
+        -- =========================
+        LocalPlayer.CharacterRemoving:Connect(function()
+            if protected then
+                blockWarn("CharacterRemoving")
+                LocalPlayer.CharacterAdded:Wait()
             end
-        end
+        end)
 
-        for _,r in ipairs(ReplicatedStorage:GetDescendants()) do
-            if r:IsA("RemoteEvent") then
-                r.OnClientEvent:Connect(function(cmd)
-                    if BypassEnabled and type(cmd)=="string" and tableFind(badFunctions,cmd) then
-                        warn("[Blocked Adonis Remote]",cmd)
-                        return
-                    end
-                end)
+        -- =========================
+        -- Protect Player removal
+        -- =========================
+        Players.PlayerRemoving:Connect(function(p)
+            if p == LocalPlayer and protected then
+                blockWarn("PlayerRemoving(LocalPlayer)")
             end
-        end
+        end)
 
+        -- =========================
+        -- Final notify
+        -- =========================
         Rayfield:Notify({
-            Title = "Adonis",
-            Content = "Bypass Enabled",
-            Duration = 3
+            Title = "Client Protections",
+            Content = "Advanced Anti‑Kick enabled\n(irreversible for this session)",
+            Duration = 4
         })
+
+        print("[Client Protections] Advanced Anti‑Kick enabled")
     end
 })
 
