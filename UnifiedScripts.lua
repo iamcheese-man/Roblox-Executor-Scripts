@@ -828,6 +828,210 @@ SATKTab:CreateButton({
         end)
     end
 })
+-- ======================
+-- HTTP REQUEST HELPER
+-- ======================
+local function httpRequest(opts)
+    local req =
+        (http_request) or
+        (request) or
+        (syn and syn.request)
+
+    if not req then
+        return nil, "Executor does not support HTTP requests"
+    end
+
+    return req(opts)
+end
+
+-- ======================
+-- RAYFIELD TAB
+-- ======================
+local HttpTab = Window:CreateTab("HTTP Requester", "globe")
+
+HttpTab:CreateSection("Request")
+
+local Method = "GET"
+local Url = ""
+local HeadersText = "{}"
+local BodyText = ""
+
+HttpTab:CreateInput({
+    Name = "URL",
+    PlaceholderText = "https://example.com/api",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        Url = v
+    end
+})
+
+HttpTab:CreateInput({
+    Name = "Method",
+    PlaceholderText = "GET / POST / PUT / DELETE",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        Method = string.upper(v)
+    end
+})
+
+HttpTab:CreateInput({
+    Name = "Headers (JSON)",
+    PlaceholderText = '{"Content-Type":"application/json"}',
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        HeadersText = v
+    end
+})
+
+HttpTab:CreateInput({
+    Name = "Body",
+    PlaceholderText = "Raw request body",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(v)
+        BodyText = v
+    end
+})
+
+HttpTab:CreateSection("Response")
+
+local ResponseLabel = HttpTab:CreateParagraph({
+    Title = "Response",
+    Content = "No request sent yet"
+})
+
+HttpTab:CreateButton({
+    Name = "Send Request",
+    Callback = function()
+        if Url == "" then
+            ResponseLabel:Set({
+                Title = "Error",
+                Content = "URL is empty"
+            })
+            return
+        end
+
+        local headers = {}
+        local ok, parsed = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(HeadersText)
+        end)
+
+        if ok and type(parsed) == "table" then
+            headers = parsed
+        end
+
+        local res, err = httpRequest({
+            Url = Url,
+            Method = Method,
+            Headers = headers,
+            Body = BodyText
+        })
+
+        if not res then
+            ResponseLabel:Set({
+                Title = "Request Failed",
+                Content = tostring(err)
+            })
+            return
+        end
+
+        local body = res.Body or ""
+        if #body > 4000 then
+            body = body:sub(1, 4000) .. "\n\n[TRUNCATED]"
+        end
+
+        ResponseLabel:Set({
+            Title = "Status: " .. tostring(res.StatusCode),
+            Content = body
+        })
+    end
+})
+
+-- #################################
+-- #### Fling Things and People ####
+-- #################################
+-- CONFIG
+local STRENGTH = 10000
+local flingEnabled = false
+local activeVelocities = {}
+
+-- =========================
+-- RAYFIELD TAB
+-- =========================
+local FlingTab = Window:CreateTab("FTAP Fling", 4483362458)
+
+FlingTab:CreateToggle({
+	Name = "Fling On Grab",
+	CurrentValue = false,
+	Flag = "FTAPFling",
+	Callback = function(Value)
+		flingEnabled = Value
+	end,
+})
+
+FlingTab:CreateSlider({
+	Name = "Fling Strength",
+	Range = {1000, 50000},
+	Increment = 500,
+	Suffix = "Force",
+	CurrentValue = STRENGTH,
+	Flag = "FTAPStrength",
+	Callback = function(Value)
+		STRENGTH = Value
+	end,
+})
+
+FlingTab:CreateParagraph({
+	Title = "Info",
+	Content = "• Fling happens ON GRAB\n• Strength updates live\n• No release needed\n• Stable physics"
+})
+
+-- =========================
+-- FLING FUNCTION
+-- =========================
+local function flingPart(part)
+	if not part or not part:IsA("BasePart") then return end
+	if activeVelocities[part] then return end
+
+	local bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+	bv.P = 1500
+	bv.Velocity = player.Character.HumanoidRootPart.CFrame.LookVector * STRENGTH
+	bv.Parent = part
+
+	activeVelocities[part] = bv
+
+	local conn
+	conn = RunService.Heartbeat:Connect(function()
+		if not flingEnabled or not part.Parent then
+			bv:Destroy()
+			activeVelocities[part] = nil
+			conn:Disconnect()
+			return
+		end
+
+		-- Live strength update
+		bv.Velocity = player.Character.HumanoidRootPart.CFrame.LookVector * STRENGTH
+	end)
+end
+
+-- =========================
+-- FTAP GRAB DETECTION
+-- =========================
+Workspace.ChildAdded:Connect(function(model)
+	if model.Name ~= "GrabParts" then return end
+
+	local grabPart = model:FindFirstChild("GrabPart")
+	if not grabPart then return end
+
+	local weld = grabPart:FindFirstChild("WeldConstraint")
+	if not weld or not weld.Part1 then return end
+
+	if flingEnabled then
+		task.defer(function()
+			flingPart(weld.Part1)
+		end)
+	end
+end)
 
 -- ############################
 -- #### Client Protections ####
